@@ -52,26 +52,20 @@ class HandlersGenerator {
 			    public class «name»Handler : I«name»Handler
 			    {
 			        private readonly I«name»Repository _«name»Repository;
-			       «FOR subdec : dec.eContents»
-			       «IF(subdec instanceof Relation)»
+			       «FOR subdec : dec.eContents.filter(Relation)»
 			       «relationDeclaration(subdec)»
-			       «ENDIF»
 			       «ENDFOR»
 			
 			        public «name»Handler(I«name»Repository «name»Repository
-			                             «FOR subdec : dec.eContents»
-			                             			       «IF(subdec instanceof Relation)»
-			                             			       «relationConstructor(subdec)»
-			                             			       «ENDIF»
-			                             			       «ENDFOR»
+                     «FOR subdec : dec.eContents.filter(Relation)»
+     			     «relationConstructor(subdec)»
+     			     «ENDFOR»
 			                             )
 			        {
 			            _«name»Repository = «name»Repository;
-			            «FOR subdec : dec.eContents»
-			            			       «IF(subdec instanceof Relation)»
-			            			       «relationInitialization(subdec)»
-			            			       «ENDIF»
-			            			       «ENDFOR»
+			           «FOR subdec : dec.eContents.filter(Relation)»
+    			       «relationInitialization(subdec)»
+    			       «ENDFOR»
 			        }
 			        
 			        private IMapper CreateMapperConf<T>()
@@ -85,10 +79,8 @@ class HandlersGenerator {
 			
 					public async Task<Guid> Create«name»(«name» model)
 					{
-						«FOR subdec : dec.eContents»
-						«IF(subdec instanceof Relation)»
+						«FOR subdec : dec.eContents.filter(Relation)»
 						«relationCreate(name, subdec)»
-						«ENDIF»
 						«ENDFOR»
 						return await _«name»Repository.Insert(model);
 					}
@@ -105,10 +97,8 @@ class HandlersGenerator {
 						var protectiveCopy = all.Select(e => map.Map<«name», «name»>(e)).ToList();
 						var finalResult = new List<«name»>();
 						
-						«FOR subdec : dec.eContents»
-						«IF(subdec instanceof Relation)»
+						«FOR subdec : dec.eContents.filter(Relation)»
 						«relationGetMany(name, subdec)»
-						«ENDIF»
 						«ENDFOR»
 						
 						if(finalResult.Count == 0) finalResult = protectiveCopy.ToList();
@@ -117,10 +107,8 @@ class HandlersGenerator {
 					
 					public async Task<«name»> Update(«name» model)
 					{
-						«FOR subdec : dec.eContents»
-						«IF(subdec instanceof Relation)»
+						«FOR subdec : dec.eContents.filter(Relation)»
 						«relationUpdate(name, subdec)»
-						«ENDIF»
 						«ENDFOR»
 						return await _«name»Repository.Put(model);
 					}
@@ -130,10 +118,8 @@ class HandlersGenerator {
 						var result = await _«name»Repository.GetById(id);
 						var map = CreateMapperConf<«name»>();
 						var finalResult = map.Map<«name», «name»>(result);
-						«FOR subdec : dec.eContents»
-						«IF(subdec instanceof Relation)»
+						«FOR subdec : dec.eContents.filter(Relation)»
 						«relationGet(name, subdec)»
-						«ENDIF»
 						«ENDFOR»
 						return finalResult;	
 					}
@@ -261,14 +247,12 @@ foreach(var item in all)
 			var result = ''''''
 			var alreadyAddedScheduleTypes = newArrayList
 			
-			for(subres : res.eContents){
-				if(subres instanceof Relation){
-					if(subres.plurality.equals("many")){
-						if(!alreadyAddedScheduleTypes.contains(subres.relationType.name)){
-							result += '''Task<List<«res.name»>> Add«subres.relationType.name»ToAllResources(List<«subres.relationType.name»> collection);
-							'''
-							alreadyAddedScheduleTypes.add(subres.relationType.name);
-						}
+			for(subres : res.eContents.filter(Relation)){
+				if(subres.plurality.equals("many")){
+					if(!alreadyAddedScheduleTypes.contains(subres.relationType.name)){
+						result += '''Task<List<«res.name»>> Add«subres.relationType.name»ToAllResources(List<«subres.relationType.name»> collection);
+						'''
+						alreadyAddedScheduleTypes.add(subres.relationType.name);
 					}
 				}
 			}
@@ -279,10 +263,9 @@ foreach(var item in all)
 		static def CharSequence scheduleRelationBody(org.xtext.example.mydsl.bookingDSL.Resource res){
 			var result = ''''''
 			
-			for(subres : res.eContents){
-				if(subres instanceof Relation){
-					if(subres.plurality.equals("many")){
-							result += '''public async Task<List<«res.name»>> Add«subres.relationType.name»ToAllResources(List<«subres.relationType.name»> collection)
+			for(subres : res.eContents.filter(Relation)){
+				if(subres.plurality.equals("many")){
+						result += '''public async Task<List<«res.name»>> Add«subres.relationType.name»ToAllResources(List<«subres.relationType.name»> collection)
 {
 	var all = await GetAll(0, 1000);
 	
@@ -295,7 +278,6 @@ foreach(var item in all)
 	return all.ToList();
 }
 							'''
-					}
 				}
 			}
 			

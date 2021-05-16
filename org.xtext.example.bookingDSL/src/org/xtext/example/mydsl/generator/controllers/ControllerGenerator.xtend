@@ -208,10 +208,8 @@ class ControllerGenerator {
 				        [Route("")]
 				        public async Task<ActionResult<Guid>> Create([FromBody]Create«resourceName»RequestModel rm)
 				        {
-				        	«FOR mem : dec.eContents»
-				        	«IF mem instanceof Constraint»
+				        	«FOR mem : dec.eContents.filter(Constraint)»
 				        	«addConstraint(mem, "rm")»
-				        	«ENDIF»
 				        	«ENDFOR»
 				        	
 				            var model = _mapper.Map<«resourceName»>(rm);
@@ -227,10 +225,8 @@ class ControllerGenerator {
 				        [Route("")]
 				        public async Task<ActionResult<«resourceName»>> Put([FromBody] Update«resourceName»RequestModel rm)
 				        {
-				        	«FOR mem : dec.eContents»
-				        	«IF mem instanceof Constraint»
+				        	«FOR mem : dec.eContents.filter(Constraint)»
 				        	«addConstraint(mem, "rm")»
-				        	«ENDIF»
 				        	«ENDFOR»
 				        	
 				        	var model = _mapper.Map<«resourceName»>(rm);
@@ -267,11 +263,10 @@ class ControllerGenerator {
 			var result = ''''''
 			var alreadyAddedScheduleTypes = newArrayList
 			
-			for(subres : res.eContents){
-				if(subres instanceof Relation){
-					if(subres.plurality.equals("many")){
-						if(!alreadyAddedScheduleTypes.contains(subres.relationType.name)){
-							result = '''
+			for(subres : res.eContents.filter(Relation)){
+				if(subres.plurality.equals("many")){
+					if(!alreadyAddedScheduleTypes.contains(subres.relationType.name)){
+						result = '''
 [HttpPut]
 [Route("Add«subres.relationType.name»sToAll")]
 public async Task<ActionResult<List<«res.name»>>> Add«subres.relationType.name»sToAll([FromBody] List<«subres.relationType.name»> list)
@@ -283,8 +278,7 @@ public async Task<ActionResult<List<«res.name»>>> Add«subres.relationType.nam
 	return Ok(result);
 }
 							'''
-							alreadyAddedScheduleTypes.add(subres.relationType.name);
-						}
+						alreadyAddedScheduleTypes.add(subres.relationType.name);
 					}
 				}
 			}

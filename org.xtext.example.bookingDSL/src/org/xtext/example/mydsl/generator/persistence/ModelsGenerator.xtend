@@ -11,13 +11,7 @@ class ModelsGenerator {
 		var systemName = resource.allContents.toList.filter(System).get(0).getName();
 		var declarations = resource.allContents.toList.filter(Declaration);
 		for(dec : declarations){
-			if(dec instanceof Customer){
-				genFile(fsa, dec, systemName)
-			}else if(dec instanceof org.xtext.example.mydsl.bookingDSL.Resource){
-				genFile(fsa, dec, systemName)
-			}else{
-				genFile(fsa, dec, systemName, dec.name)
-			}
+			genFile(fsa, dec, systemName)
 		}
 		
 		fsa.generateFile('''«systemName»/«systemName»/Persistence/Models/IEntity.cs''', 
@@ -35,7 +29,7 @@ class ModelsGenerator {
 			''')
 	}
 	
-	static def void genFile(IFileSystemAccess2 fsa, Customer cust, String systemName){
+	static def dispatch void genFile(IFileSystemAccess2 fsa, Customer cust, String systemName){
 		var name = cust.name
 		fsa.generateFile('''«systemName»/«systemName»/Persistence/Models/«name».cs''', 
 			'''
@@ -52,20 +46,15 @@ class ModelsGenerator {
 				public class «name» : «cust.superType.name», IEntity
 				{
 			    «ENDIF»
-			        «FOR mem : cust.eContents»
-			        «IF (mem instanceof Attribute )»
+			        «FOR mem : cust.members»
 			        «attribute(mem)»
-			        «ENDIF»
-			        «IF (mem instanceof Relation )»
-			        «relation(mem)»
-			        «ENDIF»
 			        «ENDFOR»
 			    }
 			}
 			''')
 	}
 	
-	static def void genFile(IFileSystemAccess2 fsa, org.xtext.example.mydsl.bookingDSL.Resource res, String systemName){
+	static def dispatch void genFile(IFileSystemAccess2 fsa, org.xtext.example.mydsl.bookingDSL.Resource res, String systemName){
 		var name = res.name
 		fsa.generateFile('''«systemName»/«systemName»/Persistence/Models/«name».cs''', 
 			'''
@@ -82,62 +71,42 @@ class ModelsGenerator {
 				public class «name» : «res.superType.name», IEntity
 				{
 			    «ENDIF»
-			        «FOR mem : res.eContents»
-			        «IF (mem instanceof Attribute )»
+			        «FOR mem : res.members»
 			        «attribute(mem)»
-			        «ENDIF»
-			        «IF (mem instanceof Relation )»
-			        «relation(mem)»
-			        «ENDIF»
 			        «ENDFOR»
 			    }
 			}
 			''')
 	}
 	
-	static def void genFile(IFileSystemAccess2 fsa, Declaration dec, String systemName, String name){
-		fsa.generateFile('''«systemName»/«systemName»/Persistence/Models/«name».cs''', 
+	static def dispatch void genFile(IFileSystemAccess2 fsa, Declaration dec, String systemName){
+		fsa.generateFile('''«systemName»/«systemName»/Persistence/Models/«dec.name».cs''', 
 			'''
 			using System;
 			using System.Collections.Generic;
 			
 			namespace «systemName».Persistence.Models
 			{
-			    public class «name» : IEntity
+			    public class «dec.name» : IEntity
 			    {
 			    	public Guid Id {get; set;}
-			        «FOR mem : dec.eContents»
-			        «IF (mem instanceof Attribute )»
+			        «FOR mem : dec.members»
 			        «attribute(mem)»
-			        «ENDIF»
-			        «IF (mem instanceof Relation )»
-			        «relation(mem)»
-			        «ENDIF»
 			        «ENDFOR»
 			    }
 			}
 			''')
 	}
 	
-	static def CharSequence attribute(Attribute att){
-		'''
-		«IF (!att.array)»
-		public «att.type» «att.name» {get; set;}
-		«ENDIF»
-		«IF (att.array)»
-		public List<«att.type»> «att.name» {get; set;}
-		«ENDIF»
+	static def dispatch attribute(Attribute att){
+		return '''
+		public «att.array ? '''List<«att.type»>''' : att.type» «att.name» {get; set;}
 		'''
 	}
 	
-	static def CharSequence relation(Relation re){
-		'''
-		«IF (re.plurality.equals("one"))»
-		public «re.relationType.name» «re.name» {get; set;} 
-		«ENDIF»
-		«IF (re.plurality.equals("many"))»
-		public List<«re.relationType.name»> «re.name» {get; set;} 
-		«ENDIF»
+	static def dispatch attribute(Relation re){
+		return '''
+		public «re.plurality.equals("one") ? re.relationType.name : '''List<«re.relationType.name»>'''» «re.name» {get; set;} 
 		'''
 	}
 }
