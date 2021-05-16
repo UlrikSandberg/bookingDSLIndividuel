@@ -12,28 +12,10 @@ class RepositoriesGenerator {
 		
 		genBaseRepo(fsa, resource, systemName)
 		
-		var definedCustomerTypes = resource.allContents.toList.filter(Customer);
-		var definedResourceTypes = resource.allContents.toList.filter(org.xtext.example.mydsl.bookingDSL.Resource);
-		var definedEntityTypes = resource.allContents.toList.filter(Entity);
-		var definedScheduleTypes = resource.allContents.toList.filter(Schedule);
-		var definedBookingTypes = resource.allContents.toList.filter(Booking);
-		
-		for (Customer c : definedCustomerTypes){
-			genRepo(fsa, resource, systemName, c.name)
+		var declarations = resource.allContents.toList.filter(Declaration)
+		for (Declaration d : declarations) {
+			genRepo(fsa, resource, systemName, d.name)
 		}
-		for (org.xtext.example.mydsl.bookingDSL.Resource c : definedResourceTypes){
-			genRepo(fsa, resource, systemName, c.name)
-		}
-		for (Entity c : definedEntityTypes){
-			genRepo(fsa, resource, systemName, c.name)
-		}
-		for (Schedule c : definedScheduleTypes){
-			genRepo(fsa, resource, systemName, c.name)
-		}
-		for (Booking c : definedBookingTypes){
-			genRepo(fsa, resource, systemName, c.name)
-		}
-		
 	}
 	
 	private static def void genRepo(IFileSystemAccess2 fsa,

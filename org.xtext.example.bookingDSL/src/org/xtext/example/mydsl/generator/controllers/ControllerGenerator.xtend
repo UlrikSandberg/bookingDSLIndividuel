@@ -16,14 +16,13 @@ class ControllerGenerator {
 		
 		for(Declaration dec : declarations){
 			genControllerFile(fsa, resource, systemName, dec.name, dec)
-			for(Member mem : dec.members){
-				if(mem instanceof Constraint){
-					if(mem.logic !== null){
-						var parameters = newArrayList
-						writeConstraint(mem.logic, parameters, dec.name)
-						for(p : parameters){
-							print(p + " ")
-						}
+			
+			for(Constraint constraint : dec.constraints){
+				if(constraint.logic !== null){
+					var parameters = newArrayList
+					writeConstraint(constraint.logic, parameters, dec.name)
+					for(p : parameters){
+						print(p + " ")
 					}
 				}
 			}

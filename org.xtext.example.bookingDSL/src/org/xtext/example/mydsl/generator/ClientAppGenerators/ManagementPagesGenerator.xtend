@@ -13,6 +13,7 @@ import java.util.List
 import java.util.ArrayList
 import org.xtext.example.mydsl.bookingDSL.Type
 import org.xtext.example.mydsl.bookingDSL.Member
+import org.xtext.example.mydsl.bookingDSL.Constraint
 
 class ManagementPagesGenerator {
 	
@@ -538,6 +539,8 @@ class ManagementPagesGenerator {
 		return '''set«mem.name»(«resetValue»)'''
 	}
 	
+	
+	
 	private def dispatch generateTableHeadColumn(Attribute mem) {
 		return '''<TableCell «(mem.type.value == 0 || mem.type.value == 3) 
 			? '''align="right"''' : null»>«mem.name»</TableCell>'''
@@ -546,6 +549,7 @@ class ManagementPagesGenerator {
 	private def dispatch generateTableHeadColumn(Relation mem) {
 		return '''<TableCell>«mem.name»</TableCell>'''
 	}
+	
 	
 	private def dispatch generateTableRow(Attribute mem) {
 		return '''
