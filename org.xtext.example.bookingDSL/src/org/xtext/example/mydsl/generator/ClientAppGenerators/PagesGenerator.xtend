@@ -143,83 +143,68 @@ class PagesGenerator {
 		''')
 	}
 	
-	private def getDisplayAttribute(Customer customer) {
+	def generateUserPage() {
+		this.fsa.generateFile(this.pagesRoot + "/UserPage.tsx", '''
+		import { Button, Card, Divider, Grid, Typography } from "@material-ui/core";
+		import React from "react";
+		import { useHistory, useParams } from "react-router";
 		
-		var customerMembers = customer.members
+		const UserPage = () => {
 		
-		for(mem : customerMembers) {
-			if(mem instanceof Attribute) {
-				if(mem.name == "name") {
-					return "name";
-				}
-			}	
-		}
-		return "id";
-	}	
-	
-	def joinCustomers(List<Customer> customers) {
-		var customersString = new ArrayList<String>();
+		    const params = useParams() as {id: string, type: string}
+		    const history = useHistory();
 		
-		for(cus : customers) {
-			customersString.add(cus.name + "Result.isSuccess")
-		}
+		    const render = () => {
+		        return (
+		            <div>
+		                <Grid container style={{width: "100%", minHeight: "100vh"}} justify="center" alignItems="center">
+		                    <Grid item xs={10} sm={8} md={6} lg={4} xl={4}>
+		                        <Card style={{width: "100%", padding: "20px", display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center"}}> 
+		                            <Typography style={{paddingBottom: "10px"}} variant="h5">User: {params.id}</Typography>
+		                            <Typography style={{paddingBottom: "10px"}} variant="h5">Type: {params.type}</Typography>
 		
-		return customersString.join(" && ")
-	}
-	
-	private def getBookingResourceDeclaration(Booking booking) {
-		for(member: booking.members) {
-			if(member instanceof Relation) {
-				if(member.relationType instanceof org.xtext.example.mydsl.bookingDSL.Resource) {
-					return member.relationType;
-				}
-			}
-		}
-	}
-	
-	private def getBookingScheduleDeclaration(Booking booking) {
-		for(member: booking.members){
-			if(member instanceof Relation) {
-				if(member.relationType instanceof Schedule) {
-					return member.relationType;
-				}
-			}
-		}
-	}
-	
-	private def getBookingCustomerType(Booking booking) {
-		for(member : booking.members) {
-			if(member instanceof Relation) {
-				if(member.relationType instanceof Customer) {
-					return member.relationType;
-				}
-			}
-		}
-	}
-	
-	private def getUniqueResourceImport(List<Booking> bookings) {
-		var list = new ArrayList<String>();
-		for(booking: bookings) {
-			if(!list.contains(getBookingResourceDeclaration(booking).name)) {
-				list.add(getBookingResourceDeclaration(booking).name)
-			}
+		                            <Divider style={{margin: "20px 0"}}></Divider>
+		                            
+		                            <div style={{padding: "20px 0", width: "100%"}}>
+		                                <Button style={{width: "100%"}} variant="outlined" color="primary" onClick={() => history.push(`/bookingoverview/${params.id}/${params.type}`)}>My bookings</Button>
+		                            </div>
+		                            <div style={{paddingBottom: "20px", width: "100%"}}>
+		                                <Button style={{width: "100%"}} variant="outlined" color="primary" onClick={() => history.push(`/booking/${params.id}/${params.type}`)}>Create Booking</Button>
+		                            </div>
+		                        </Card>
+		                    </Grid>
+		                </Grid>
+		            </div>
+		        )
+		    }
+		
+		    return render();
 		}
 		
-		return list;
+		export default UserPage;
+		''')
 	}
 	
-	private def getUniqueScheduleImport(List<Booking> bookings) {
-		var list = new ArrayList<String>();
-		for(booking: bookings) {
-			if(!list.contains(getBookingScheduleDeclaration(booking).name)) {
-				list.add(getBookingScheduleDeclaration(booking).name)
-			}
-		}
-		
-		return list;
-	}
 	
-	def generateBookingPage() {
+	def generateBookingOverpage()
+ 	{
+ 		this.fsa.generateFile(this.pagesRoot + "/BookingOverviewPage.tsx", '''
+ 		import React from "react";
+ 		
+ 		const BookingOverviewPage = () => {
+ 		
+ 		    const render = () => {
+ 		        return <div>Booking overview</div>
+ 		    }
+ 		
+ 		    return render();
+ 		}
+ 		
+ 		export default BookingOverviewPage;
+ 		''')
+ 	}
+ 	
+ 	def generateBookingPage() {
 		
 		var bookings = this.resource.allContents.filter(Booking).toList;
 		var customers = this.resource.allContents.filter(Customer).toList;
@@ -436,15 +421,82 @@ class PagesGenerator {
 		''')
 	}
 	
+	private def getDisplayAttribute(Customer customer) {
+		
+		var customerMembers = customer.members
+		
+		for(mem : customerMembers.filter(Attribute)) {
+			if(mem.name == "name") {
+				return "name";
+			}
+		}
+		return "id";
+	}	
+	
+	def joinCustomers(List<Customer> customers) {
+		var customersString = new ArrayList<String>();
+		
+		for(cus : customers) {
+			customersString.add(cus.name + "Result.isSuccess")
+		}
+		
+		return customersString.join(" && ")
+	}
+	
+	private def getBookingResourceDeclaration(Booking booking) {
+		for(member: booking.members.filter(Relation)) {
+			if(member.relationType instanceof org.xtext.example.mydsl.bookingDSL.Resource) {
+				return member.relationType;
+			}
+		}
+	}
+	
+	private def getBookingScheduleDeclaration(Booking booking) {
+		for(member: booking.members.filter(Relation)){
+			if(member.relationType instanceof Schedule) {
+				return member.relationType;
+			}
+		}
+	}
+	
+	private def getBookingCustomerType(Booking booking) {
+		for(member : booking.members.filter(Relation)) {
+			if(member.relationType instanceof Customer) {
+				return member.relationType;
+			}
+		}
+	}
+	
+	private def getUniqueResourceImport(List<Booking> bookings) {
+		var list = new ArrayList<String>();
+		for(booking: bookings) {
+			if(!list.contains(getBookingResourceDeclaration(booking).name)) {
+				list.add(getBookingResourceDeclaration(booking).name)
+			}
+		}
+		
+		return list;
+	}
+	
+	private def getUniqueScheduleImport(List<Booking> bookings) {
+		var list = new ArrayList<String>();
+		for(booking: bookings) {
+			if(!list.contains(getBookingScheduleDeclaration(booking).name)) {
+				list.add(getBookingScheduleDeclaration(booking).name)
+			}
+		}
+		
+		return list;
+	}
+	
+	
 	private def getDisplayAttribute(Schedule schedule) {
 		
 		var relationTypeMembers =schedule.members
 		
-		for(mem : relationTypeMembers) {
-			if(mem instanceof Attribute) {
-				if(mem.name == "name" && mem.type.literal == "string") {
-					return "name";
-				}
+		for(mem : relationTypeMembers.filter(Attribute)) {
+			if(mem.name == "name" && mem.type.literal == "string") {
+				return "name";
 			}	
 		}
 		return "id";
@@ -454,74 +506,11 @@ class PagesGenerator {
 		
 		var relationTypeMembers = resource.members
 		
-		for(mem : relationTypeMembers) {
-			if(mem instanceof Attribute) {
-				if(mem.name == "name" && mem.type.literal == "string") {
-					return "name";
-				}
-			}	
+		for(mem : relationTypeMembers.filter(Attribute)) {
+			if(mem.name == "name" && mem.type.literal == "string") {
+				return "name";
+			}
 		}
 		return "id";
 	}	
-	
-	def generateUserPage() {
-		this.fsa.generateFile(this.pagesRoot + "/UserPage.tsx", '''
-		import { Button, Card, Divider, Grid, Typography } from "@material-ui/core";
-		import React from "react";
-		import { useHistory, useParams } from "react-router";
-		
-		const UserPage = () => {
-		
-		    const params = useParams() as {id: string, type: string}
-		    const history = useHistory();
-		
-		    const render = () => {
-		        return (
-		            <div>
-		                <Grid container style={{width: "100%", minHeight: "100vh"}} justify="center" alignItems="center">
-		                    <Grid item xs={10} sm={8} md={6} lg={4} xl={4}>
-		                        <Card style={{width: "100%", padding: "20px", display: "flex", justifyContent: "center", flexDirection: "column", textAlign: "center"}}> 
-		                            <Typography style={{paddingBottom: "10px"}} variant="h5">User: {params.id}</Typography>
-		                            <Typography style={{paddingBottom: "10px"}} variant="h5">Type: {params.type}</Typography>
-		
-		                            <Divider style={{margin: "20px 0"}}></Divider>
-		                            
-		                            <div style={{padding: "20px 0", width: "100%"}}>
-		                                <Button style={{width: "100%"}} variant="outlined" color="primary" onClick={() => history.push(`/bookingoverview/${params.id}/${params.type}`)}>My bookings</Button>
-		                            </div>
-		                            <div style={{paddingBottom: "20px", width: "100%"}}>
-		                                <Button style={{width: "100%"}} variant="outlined" color="primary" onClick={() => history.push(`/booking/${params.id}/${params.type}`)}>Create Booking</Button>
-		                            </div>
-		                        </Card>
-		                    </Grid>
-		                </Grid>
-		            </div>
-		        )
-		    }
-		
-		    return render();
-		}
-		
-		export default UserPage;
-		''')
-	}
-	
-	
-	def generateBookingOverpage()
- 	{
- 		this.fsa.generateFile(this.pagesRoot + "/BookingOverviewPage.tsx", '''
- 		import React from "react";
- 		
- 		const BookingOverviewPage = () => {
- 		
- 		    const render = () => {
- 		        return <div>Booking overview</div>
- 		    }
- 		
- 		    return render();
- 		}
- 		
- 		export default BookingOverviewPage;
- 		''')
- 	}
 }

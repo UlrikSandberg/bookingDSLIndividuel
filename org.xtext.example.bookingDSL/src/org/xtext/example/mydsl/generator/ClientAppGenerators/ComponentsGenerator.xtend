@@ -5,6 +5,8 @@ import org.eclipse.emf.ecore.resource.Resource
 import org.xtext.example.mydsl.bookingDSL.Customer
 import org.xtext.example.mydsl.bookingDSL.Entity
 import org.xtext.example.mydsl.bookingDSL.Schedule
+import org.xtext.example.mydsl.bookingDSL.Declaration
+import org.xtext.example.mydsl.bookingDSL.Booking
 
 class ComponentsGenerator {
 	
@@ -18,13 +20,33 @@ class ComponentsGenerator {
 		this.componentsRoot = srcRoot + "/components";
 	}
 	
+	def importDeclaration(Declaration declaration) {
+		switch declaration {
+			Booking: { null }
+			default: {
+				return '''
+				import «declaration.name»sOverviewPage from '../pages/management/«declaration.name»/«declaration.name»sOverviewPage';
+				import Update«declaration.name»Page from '../pages/management/«declaration.name»/Update«declaration.name»Page';
+				import Create«declaration.name»Page from '../pages/management/«declaration.name»/Create«declaration.name»Page';
+				'''
+			}
+		}
+	}
+	
+	def createDynamicUrls(Declaration declaration) {
+		switch declaration {
+			Booking: { null }
+			default: {
+				return '''
+				<Route exact path="/management/«declaration.name»s_overview" component={«declaration.name»sOverviewPage}/>
+		      	<Route exact path="/management/«declaration.name»_update/:id" component={Update«declaration.name»Page}/>
+		      	<Route exact path="/management/«declaration.name»_create" component={Create«declaration.name»Page}/>
+				'''
+			}	
+		}
+	}
+	
 	def generate() {
-		
-		var definedCustomerTypes = resource.allContents.toList.filter(Customer);
-		var definedResourceTypes = resource.allContents.toList.filter(org.xtext.example.mydsl.bookingDSL.Resource);
-		var definedEntityTypes = resource.allContents.toList.filter(Entity);
-		var definedScheduleTypes = resource.allContents.toList.filter(Schedule);
-		
 		this.fsa.generateFile(this.componentsRoot + "/App.tsx", '''
 		import React, { Component } from 'react';
 		import { Redirect, Route, Switch } from 'react-router';
@@ -34,25 +56,8 @@ class ComponentsGenerator {
 		import ResourceOverviewPage from '../pages/management/ResourceOverviewPage';
 		import UserPage from '../pages/UserPage';
 		import BookingOverviewPage from '../pages/BookingOverviewPage';
-		«FOR entity : definedEntityTypes»
-		import «entity.name»sOverviewPage from '../pages/management/«entity.name»/«entity.name»sOverviewPage';
-		import Update«entity.name»Page from '../pages/management/«entity.name»/Update«entity.name»Page';
-		import Create«entity.name»Page from '../pages/management/«entity.name»/Create«entity.name»Page';
-		«ENDFOR»
-		«FOR resource : definedResourceTypes»
-		import «resource.name»sOverviewPage from '../pages/management/«resource.name»/«resource.name»sOverviewPage';
-		import Update«resource.name»Page from '../pages/management/«resource.name»/Update«resource.name»Page';
-		import Create«resource.name»Page from '../pages/management/«resource.name»/Create«resource.name»Page';
-		«ENDFOR»
-		«FOR customer : definedCustomerTypes»
-		import «customer.name»sOverviewPage from '../pages/management/«customer.name»/«customer.name»sOverviewPage';
-		import Update«customer.name»Page from '../pages/management/«customer.name»/Update«customer.name»Page';
-		import Create«customer.name»Page from '../pages/management/«customer.name»/Create«customer.name»Page';
-		«ENDFOR»
-		«FOR schedule : definedScheduleTypes»
-		import «schedule.name»sOverviewPage from '../pages/management/«schedule.name»/«schedule.name»sOverviewPage';
-		import Update«schedule.name»Page from '../pages/management/«schedule.name»/Update«schedule.name»Page';
-		import Create«schedule.name»Page from '../pages/management/«schedule.name»/Create«schedule.name»Page';
+		«FOR declaration : resource.allContents.toList.filter(Declaration)»
+		«importDeclaration(declaration)»
 		«ENDFOR»
 		
 		const App = () => {
@@ -60,25 +65,8 @@ class ComponentsGenerator {
 		  const render = () => {
 		    return <Router>
 		      <Switch>
-		      	«FOR entity : definedEntityTypes»
-		      	<Route exact path="/management/«entity.name»s_overview" component={«entity.name»sOverviewPage}/>
-		      	<Route exact path="/management/«entity.name»_update/:id" component={Update«entity.name»Page}/>
-		      	<Route exact path="/management/«entity.name»_create" component={Create«entity.name»Page}/>
-		      	«ENDFOR»
-		      	«FOR resource : definedResourceTypes»
-		      	<Route exact path="/management/«resource.name»s_overview" component={«resource.name»sOverviewPage}/>
-		      	<Route exact path="/management/«resource.name»_update/:id" component={Update«resource.name»Page}/>
-		      	<Route exact path="/management/«resource.name»_create" component={Create«resource.name»Page}/>
-		      	«ENDFOR»
-		      	«FOR customer : definedCustomerTypes»
-		      	<Route exact path="/management/«customer.name»s_overview" component={«customer.name»sOverviewPage}/>
-		      	<Route exact path="/management/«customer.name»_update/:id" component={Update«customer.name»Page}/>
-		      	<Route exact path="/management/«customer.name»_create" component={Create«customer.name»Page}/>
-		      	«ENDFOR»
-		      	«FOR schedule : definedScheduleTypes»
-		      	<Route exact path="/management/«schedule.name»s_overview" component={«schedule.name»sOverviewPage}/>
-		      	<Route exact path="/management/«schedule.name»_update/:id" component={Update«schedule.name»Page}/>
-		      	<Route exact path="/management/«schedule.name»_create" component={Create«schedule.name»Page}/>
+		      	«FOR declaration : resource.allContents.toList.filter(Declaration)»
+		      	«createDynamicUrls(declaration)»
 		      	«ENDFOR»
 		      	<Route exact path="/management/overview" component={ResourceOverviewPage}/>
 		        <Route exact path="/booking/:id/:type" component={BookingPage}/>
