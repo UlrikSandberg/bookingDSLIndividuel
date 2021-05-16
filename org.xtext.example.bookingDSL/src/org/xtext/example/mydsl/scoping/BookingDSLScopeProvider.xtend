@@ -3,10 +3,89 @@
  */
 package org.xtext.example.mydsl.scoping
 
+import org.eclipse.xtext.scoping.IScope
+import org.eclipse.xtext.scoping.Scopes
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.EReference
+import org.xtext.example.mydsl.bookingDSL.Var
+import org.xtext.example.mydsl.bookingDSL.BookingDSLPackage
+import org.eclipse.xtext.EcoreUtil2
+import org.xtext.example.mydsl.bookingDSL.Customer
+import org.xtext.example.mydsl.bookingDSL.Attribute
+import java.util.List
+import org.xtext.example.mydsl.bookingDSL.Resource
+import java.util.ArrayList
+import java.util.HashSet
+import java.util.Set
+
 /** 
  * This class contains custom scoping description.
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#scoping
  * on how and when to use it.
  */
 class BookingDSLScopeProvider extends AbstractBookingDSLScopeProvider {
+	
+	override IScope getScope(EObject context, EReference reference) {
+		switch context {
+			Var case reference == BookingDSLPackage.Literals.VAR__NAME: {
+				var customer = EcoreUtil2::getContainerOfType(context, Customer);
+				if(customer !== null) {
+					return Scopes.scopeFor(customer.expandCustomerScopeBase)	
+				}
+				
+				var resource = EcoreUtil2::getContainerOfType(context, Resource);
+				if(resource !== null) {
+					return Scopes.scopeFor(resource.expandResourceScopeBase)
+				}
+			}
+		}
+		
+		super.getScope(context, reference)
+	}
+	
+	def expandCustomerScopeBase (Customer customer) {
+		
+		val scope = new ArrayList<Attribute>()
+		var visited = new HashSet<Customer>()
+		
+		// Add all the current attributes to the scope
+		visited.add(customer)
+		customer.members.filter(Attribute).forEach[e | scope.add(e)]
+		if(customer.superType !== null) {
+			return expandCustomerScope(customer.superType, scope, visited)
+		}
+		return scope;
+	}
+	
+	def List<Attribute> expandCustomerScope(Customer customer, List<Attribute> scope, HashSet<Customer> visited) {
+		if(visited.contains(customer)) return new ArrayList<Attribute> // Terminate if cyclic dependency is reached
+		visited.add(customer)
+		customer.members.filter(Attribute).forEach[e | scope.add(e)]
+		if(customer.superType !== null) {
+			return expandCustomerScope(customer.superType, scope, visited)
+		}
+		return scope;
+	}
+	
+	def expandResourceScopeBase(Resource resource) {
+		val scope = new ArrayList<Attribute>()
+		val visited = new HashSet<Resource>()
+		
+		visited.add(resource)
+		resource.members.filter(Attribute).forEach[e | scope.add(e)]
+		if(resource.superType !== null) {
+			return expandResourceScope(resource.superType, scope, visited)
+		}
+		return scope;
+	}
+	
+	def List<Attribute> expandResourceScope(Resource resource, List<Attribute> scope, HashSet<Resource> visited) {
+		if(visited.contains(resource)) return new ArrayList<Attribute>
+		visited.add(resource)
+		resource.members.filter(Attribute).forEach[e | scope.add(e)]
+		if(resource.superType !== null) {
+			return expandResourceScope(resource, scope, visited)
+		}
+		return scope;
+	}
 }
