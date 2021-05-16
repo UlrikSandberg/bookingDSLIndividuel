@@ -109,11 +109,11 @@ Logic:
 ;
 
 Disjunction:
-	left=Conjunction ('or' right=Conjunction)?
+	left=Conjunction (operator='or' right=Conjunction)?
 ;
 
 Conjunction:
-	left=PrimitiveLogic ('and' right=PrimitiveLogic)?
+	left=PrimitiveLogic (operator='and' right=PrimitiveLogic)?
 ;
 
 PrimitiveLogic:
@@ -125,7 +125,7 @@ ExternalCall:
 ;
 
 Comparison:
-	left=Expression (operator=CompareOperator right=Expression)?
+	left=Expression (operator=CompareOperator right=Expression)
 ;
 
 CompareOperator:

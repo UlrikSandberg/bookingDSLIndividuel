@@ -33,7 +33,7 @@ class BookingDSLProposalProvider extends AbstractBookingDSLProposalProvider {
 	
 	public override void completeVar_Name(EObject model, Assignment assignment, ContentAssistContext context, ICompletionProposalAcceptor acceptor) {
 		lookupCrossReference(assignment.terminal as CrossReference, context, acceptor, [description |
-			var result = false;
+			
 			val proxy = description.EObjectOrProxy as Attribute;
 			val container = model.eContainer;
 
@@ -44,7 +44,6 @@ class BookingDSLProposalProvider extends AbstractBookingDSLProposalProvider {
 					if(visited.contains(current)) return false; // terminate search to prevent getting stuck in infinite loop
 					visited.add(container)
 					if(current.members.filter[e | e.equals(proxy)].length > 0) {
-						println(proxy)
 						return true
 					}
 					current = current.superType
