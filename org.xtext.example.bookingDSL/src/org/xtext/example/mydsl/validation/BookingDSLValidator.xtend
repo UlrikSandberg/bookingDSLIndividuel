@@ -16,6 +16,18 @@ import org.xtext.example.mydsl.bookingDSL.Resource
 import org.xtext.example.mydsl.bookingDSL.Customer
 import java.util.ArrayList
 import java.util.List
+import org.xtext.example.mydsl.bookingDSL.Constraint
+import org.xtext.example.mydsl.bookingDSL.Logic
+import org.xtext.example.mydsl.bookingDSL.Disjunction
+import org.xtext.example.mydsl.bookingDSL.Conjunction
+import org.xtext.example.mydsl.bookingDSL.PrimitiveLogic
+import org.xtext.example.mydsl.bookingDSL.Comparison
+import org.xtext.example.mydsl.bookingDSL.Expression
+import org.xtext.example.mydsl.bookingDSL.Plus
+import org.xtext.example.mydsl.bookingDSL.Minus
+import org.xtext.example.mydsl.bookingDSL.Mult
+import org.xtext.example.mydsl.bookingDSL.Div
+import org.xtext.example.mydsl.bookingDSL.Var
 
 /** 
  * This class contains custom validation rules. 
@@ -23,7 +35,8 @@ import java.util.List
  */
 class BookingDSLValidator extends AbstractBookingDSLValidator {
 	
-	@Check def void warnIfNoDisplayName(Declaration declaration) {
+	@Check 
+	def void warnIfNoDisplayName(Declaration declaration) {
 		if (declaration instanceof Booking) {
 			return;
 		}
@@ -102,7 +115,8 @@ class BookingDSLValidator extends AbstractBookingDSLValidator {
 	}
 	
 
-	@Check def void errorIfDisplayNameIsNotString(Attribute attri) {
+	@Check 
+	def void errorIfDisplayNameIsNotString(Attribute attri) {
 		var attriName = attri.getName()
 		if (attriName.equals(("name"))) {
 			var attriType = attri.getType().getLiteral()
@@ -113,13 +127,15 @@ class BookingDSLValidator extends AbstractBookingDSLValidator {
 		}
 	}
 
-	@Check def void errorIfSystemNameLowerCase(System system) {
+	@Check 
+	def void errorIfSystemNameLowerCase(System system) {
 		if (!Character::isUpperCase(system.getName().charAt(0))) {
 			error("System name must begin with a capital letter", null)
 		}
 	}
 
-	@Check def void errorIfDeclarationNameLowerCase(Declaration declaration) {
+	@Check 
+	def void errorIfDeclarationNameLowerCase(Declaration declaration) {
 		if (!Character::isUpperCase((declaration.getName().charAt(0)))) {
 			error("Declaration name must begin with a capital letter", null)
 		}
@@ -310,5 +326,90 @@ class BookingDSLValidator extends AbstractBookingDSLValidator {
 			}
 		}
 		return null;
+	}
+	
+	@Check
+	def errorOnConstraintNoneNumberReference(Constraint constraint) {
+		completeLogic(constraint.logic)
+	}
+	
+	def boolean completeLogic(Logic logic) {
+		return computeDisjunction(logic.disjunction);
+	}
+	
+	def boolean computeDisjunction(Disjunction disjunction) {
+		if(disjunction.right !== null) {
+			return computeConjunction(disjunction.left) || computeConjunction(disjunction.right)
+		} else {
+			return computeConjunction(disjunction.left)
+		}
+	}
+	
+	def boolean computeConjunction(Conjunction conjunction) {
+		if(conjunction.right !== null) {
+			return computePrimitiveLogic(conjunction.left) && computePrimitiveLogic(conjunction.right)
+		} else {
+			return computePrimitiveLogic(conjunction.left)
+		}
+	}
+	
+	def boolean computePrimitiveLogic(PrimitiveLogic primitive) {
+		if(primitive.comparison !== null) {
+			return comparrison(primitive.comparison)
+		}
+		
+		if(primitive.logic !== null) {
+			return completeLogic(primitive.logic)
+		}
+		
+		return false
+	}
+	
+	
+	def boolean comparrison(Comparison comparison) {
+		
+		val leftResult = comparison.left.compute
+		val rightResult = comparison.right.compute
+		
+		if(comparison.operator == "<") {
+			return leftResult < rightResult
+		}
+		if(comparison.operator == ">") {
+			return leftResult > rightResult
+		}
+		if(comparison.operator == "==") {
+			return leftResult == rightResult
+		}
+		if(comparison.operator == "<=") {
+			return leftResult <= rightResult
+		}
+		if(comparison.operator == ">=") {
+			return leftResult >= rightResult
+		}
+		
+		return false
+	}
+	
+	def double compute(Expression exp) {
+		switch exp {
+			Plus: exp.left.compute + exp.right.compute
+			Minus: exp.left.compute - exp.right.compute
+			Mult: exp.left.compute * exp.right.compute
+			Div: exp.left.compute / exp.right.compute
+			org.xtext.example.mydsl.bookingDSL.Number: Double.valueOf(exp.value)
+			Var: getVarType(exp)
+			default: return 0
+		}
+	}
+	
+	def double getVarType(Var v) {
+		if(v.name.isArray) {
+			error("You can't reference an array in a mathemathical expression", null)	
+		}
+		if(v.name.type.toString() == "bool" || v.name.type.toString() == "string") {
+			error("You can't reference either strings or booleans in expressions", null)
+		}
+		
+		return 0
 	}
 }

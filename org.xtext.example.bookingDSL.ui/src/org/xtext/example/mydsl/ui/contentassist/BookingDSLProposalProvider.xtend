@@ -44,6 +44,7 @@ class BookingDSLProposalProvider extends AbstractBookingDSLProposalProvider {
 					if(visited.contains(current)) return false; // terminate search to prevent getting stuck in infinite loop
 					visited.add(container)
 					if(current.members.filter[e | e.equals(proxy)].length > 0) {
+						println(proxy)
 						return true
 					}
 					current = current.superType
