@@ -529,7 +529,7 @@ class ManagementPagesGenerator {
 		var defaultValue = type == "boolean" 
 			? "false" 
 			: type == "string"
-				? ""
+				? '''""'''
 				: "undefined"
 		return '''set«mem.name»(«mem.isArray ? array : defaultValue»)'''
 	}
@@ -608,8 +608,8 @@ class ManagementPagesGenerator {
 	
 	private def dispatch generateDownloadSetterCode(Member mem) {
 		return switch mem {
-			Attribute: '''set«mem»(result.data.«mem.name»)'''
-			Relation: '''set«mem»(result.data.«mem.name»)'''
+			Attribute: '''set«mem.name»(result.data.«mem.name»)'''
+			Relation: '''set«mem.name»(result.data.«mem.name»)'''
 		}
 	}
 	

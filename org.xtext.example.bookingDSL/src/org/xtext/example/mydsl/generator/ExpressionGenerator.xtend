@@ -81,7 +81,7 @@ class ExpressionGenerator {
 			Div: exp.left.compute / exp.right.compute
 			org.xtext.example.mydsl.bookingDSL.Number: Double.valueOf(exp.value)
 			Var: 0.0
-			default: throw new Exception("Error en expressions")
+			default: throw new Exception("Error in expressions")
 		}
 	}
 }
